@@ -2,6 +2,11 @@ name: iOS Fastlane Beta
 
 on:
   workflow_call:
+    inputs:
+      LANE:
+        type: string
+        required: true
+        default: "beta"
     secrets:
       MATCH_PASSWORD:
         required: true
@@ -45,4 +50,4 @@ jobs:
           APP_STORE_CONNECT_API_KEY_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_KEY_ID }}
           APP_STORE_CONNECT_API_KEY_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ISSUER_ID }}
         run: cd ios
-          bundle exec fastlane ios beta
+          bundle exec fastlane ios ${{ inputs.LANE }}

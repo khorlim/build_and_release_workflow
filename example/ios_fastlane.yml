@@ -27,7 +27,9 @@ on:
 
 jobs:
   build-and-deploy:
-    uses: khorlim/build_and_release_workflow/.github/workflows/ios_fastlane_beta.yml@main
+    uses: khorlim/build_and_release_workflow/.github/workflows/ios_fastlane.yml@main
+    with:
+      LANE: "beta"
     secrets:
       # Match password for decrypting certificates and provisioning profiles
       # This is the password you set when initializing match
