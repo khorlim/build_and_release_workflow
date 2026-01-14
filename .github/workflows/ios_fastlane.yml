@@ -63,9 +63,7 @@ jobs:
         run: flutter pub get
 
       - name: Generate iOS files
-        # --no-codesign: preparation only
-        # --archive-only: stops before turning it into an IPA (saves time)
-        run: flutter build ipa --no-codesign --release --archive-only
+        run: flutter build ipa --release --no-codesign
 
       - name: Run fastlane beta
         working-directory: ios
