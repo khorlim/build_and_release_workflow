@@ -1,11 +1,11 @@
-name: iOS Fastlane Beta
+name: IOS Fastlane
 
 on:
   workflow_call:
     inputs:
       LANE:
         type: string
-        required: true
+        required: false
         default: "beta"
     secrets:
       MATCH_PASSWORD:
