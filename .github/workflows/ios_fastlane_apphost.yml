@@ -75,8 +75,12 @@ jobs:
         working-directory: ios
         run: bundle exec fastlane --version
 
-      - name: Generate iOS files
-        run: flutter build ipa --release --no-codesign
+      - name: Clean Derived Data
+        run: rm -rf ~/Library/Developer/Xcode/DerivedData/*
+
+      - name: Pod Install
+        working-directory: ios
+        run: bundle exec pod install --repo-update
 
       - name: Sync Certificates (Match)
         working-directory: ios
