@@ -1,0 +1,47 @@
+name: iOS Fastlane Beta
+
+on:
+  workflow_call:
+    secrets:
+      MATCH_PASSWORD:
+        required: true
+      MATCH_GIT_BASIC_AUTHORIZATION:
+        required: true
+      APP_STORE_CONNECT_API_KEY_KEY:
+        required: true
+      APP_STORE_CONNECT_API_KEY_KEY_ID:
+        required: true
+      APP_STORE_CONNECT_API_KEY_ISSUER_ID:
+        required: true
+
+jobs:
+  build-and-deploy:
+    name: Build and Deploy iOS
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: 3.2 # or whatever Ruby version your fastlane needs
+
+      - name: Install Bundler
+        run: gem install bundler
+
+      - name: Install dependencies
+        run: bundle install
+
+      - name: Install fastlane
+        run: bundle exec fastlane --version
+
+      - name: Run fastlane beta
+        env:
+          MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
+          MATCH_GIT_BASIC_AUTHORIZATION: ${{ secrets.MATCH_GIT_BASIC_AUTHORIZATION }}
+          APP_STORE_CONNECT_API_KEY_KEY: ${{ secrets.APP_STORE_CONNECT_API_KEY_KEY }}
+          APP_STORE_CONNECT_API_KEY_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_KEY_ID }}
+          APP_STORE_CONNECT_API_KEY_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ISSUER_ID }}
+        run: bundle exec fastlane ios beta

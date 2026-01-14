@@ -1,0 +1,49 @@
+name: Example - iOS Fastlane Beta
+
+# This is an example workflow showing how to use the reusable iOS Fastlane Beta workflow
+# Copy this file and customize it for your needs
+
+on:
+  # Example: Trigger on push to main branch
+  push:
+    branches:
+      - main
+    paths:
+      - "ios/**"
+      - "fastlane/**"
+      - "Gemfile"
+      - "Gemfile.lock"
+
+  # Example: Trigger on manual workflow dispatch
+  workflow_dispatch:
+
+  # Example: Trigger on pull request
+  # pull_request:
+  #   branches:
+  #     - main
+
+jobs:
+  build-and-deploy:
+    uses: ./.github/workflows/ios_fastlane/ios_fastlane_beta.yml
+    secrets:
+      # Match password for decrypting certificates and provisioning profiles
+      # This is the password you set when initializing match
+      MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
+
+      # Git basic authorization for accessing the match certificates repository
+      # Format: base64(username:token) or base64(username:password)
+      # To encode: echo -n "username:token" | base64 | pbcopy
+      MATCH_GIT_BASIC_AUTHORIZATION: ${{ secrets.MATCH_GIT_BASIC_AUTHORIZATION }}
+
+      # App Store Connect API Key (private key content)
+      # This is the .p8 key file content from App Store Connect
+      APP_STORE_CONNECT_API_KEY_KEY: ${{ secrets.APP_STORE_CONNECT_API_KEY_KEY }}
+
+      # App Store Connect API Key ID
+      # Found in App Store Connect → Users and Access → Keys
+      APP_STORE_CONNECT_API_KEY_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_KEY_ID }}
+
+      # App Store Connect API Key Issuer ID
+      # Found in App Store Connect → Users and Access → Keys
+      APP_STORE_CONNECT_API_KEY_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ISSUER_ID }}
+

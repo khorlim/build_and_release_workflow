@@ -1,0 +1,51 @@
+name: Example - iOS Build and Upload AppHost
+
+# This is an example workflow showing how to use the reusable iOS build and upload workflow
+# Copy this file and customize it for your needs
+
+on:
+  # Example: Trigger on push to main branch
+  push:
+    branches:
+      - main
+    paths:
+      - "ios/**"
+      - "lib/**"
+      - "pubspec.yaml"
+
+  # Example: Trigger on manual workflow dispatch
+  workflow_dispatch:
+
+  # Example: Trigger on pull request
+  # pull_request:
+  #   branches:
+  #     - main
+
+jobs:
+  build-and-upload:
+    uses: ./.github/workflows/ios_apphost/ios_apphost.yml
+    secrets:
+      # GitHub token for accessing private submodules
+      SUBMODULE_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # iOS Code Signing Certificate (base64 encoded .p12 file)
+      # To encode: base64 -i your_certificate.p12 | pbcopy
+      CERTIFICATE_P12: ${{ secrets.IOS_CERTIFICATE_P12 }}
+
+      # Password for the .p12 certificate
+      CERTIFICATE_PASSWORD: ${{ secrets.IOS_CERTIFICATE_PASSWORD }}
+
+      # iOS Provisioning Profile (base64 encoded .mobileprovision file)
+      # To encode: base64 -i your_profile.mobileprovision | pbcopy
+      MOBILEPROVISION: ${{ secrets.IOS_MOBILEPROVISION }}
+
+      # Telegram Bot Configuration
+      TELEGRAMBOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+      TELEGRAM_CHATID: ${{ secrets.TELEGRAM_CHAT_ID }}
+      TELEGRAM_TOPICID: ${{ secrets.TELEGRAM_TOPIC_ID }}
+
+      # AppHost Configuration
+      APPHOST_USER_ID: ${{ secrets.APPHOST_USER_ID }}
+      APPHOST_APP_ID: ${{ secrets.APPHOST_APP_ID }}
+      APPHOST_KEY: ${{ secrets.APPHOST_KEY }}
+      APPHOST_IOS_BUNDLE_IDENTIFIER: ${{ secrets.APPHOST_IOS_BUNDLE_IDENTIFIER }}

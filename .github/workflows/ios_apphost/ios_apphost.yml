@@ -1,0 +1,200 @@
+name: IOS Build & Upload AppHost
+
+on:
+  workflow_call:
+    secrets:
+      SUBMODULE_TOKEN:
+        required: true
+      CERTIFICATE_P12:
+        required: true
+      CERTIFICATE_PASSWORD:
+        required: true
+      MOBILEPROVISION:
+        required: true
+      TELEGRAMBOT_TOKEN:
+        required: true
+      TELEGRAM_CHATID:
+        required: true
+      TELEGRAM_TOPICID:
+        required: true
+      APPHOST_USER_ID:
+        required: true
+      APPHOST_APP_ID:
+        required: true
+      APPHOST_KEY:
+        required: true
+      APPHOST_IOS_BUNDLE_IDENTIFIER:
+        required: true
+
+jobs:
+  ios-distribute:
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: true
+          token: ${{ secrets.SUBMODULE_TOKEN }}
+
+      - name: Configure Git auth for private dependencies
+        run: |
+          echo "machine github.com login x-access-token password ${{ secrets.SUBMODULE_TOKEN }}" > ~/.netrc
+          chmod 600 ~/.netrc
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: "3.32.5"
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Install the Apple certificate and provisioning profile
+        shell: bash
+        env:
+          IOS_BUILD_CERTIFICATE_BASE64: ${{ secrets.CERTIFICATE_P12 }}
+          IOS_BUILD_CERTIFICATE_PASSWORD: ${{ secrets.CERTIFICATE_PASSWORD }}
+          IOS_MOBILE_PROVISIONING_PROFILE_BASE64: ${{ secrets.MOBILEPROVISION }}
+          IOS_GITHUB_KEYCHAIN_PASSWORD: ${{ secrets.CERTIFICATE_PASSWORD }}
+        run: |
+          # create variables
+          CERTIFICATE_PATH=$RUNNER_TEMP/build_certificate.p12
+          KEYCHAIN_PATH=$RUNNER_TEMP/app-signing.keychain-db
+          PP_PATH=$RUNNER_TEMP/temp.mobileprovision
+
+
+          # import certificate and provisioning profile from secrets
+          echo -n "$IOS_BUILD_CERTIFICATE_BASE64" | base64 --decode -o $CERTIFICATE_PATH
+          echo -n "$IOS_MOBILE_PROVISIONING_PROFILE_BASE64" | base64 --decode -o $PP_PATH
+
+          # create temporary keychain
+          security create-keychain -p "$IOS_GITHUB_KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
+          security set-keychain-settings -lut 21600 $KEYCHAIN_PATH
+          security unlock-keychain -p "$IOS_GITHUB_KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
+
+          # import certificate to keychain
+          security import $CERTIFICATE_PATH -P "$IOS_BUILD_CERTIFICATE_PASSWORD" -A -t cert -f pkcs12 -k $KEYCHAIN_PATH
+          security list-keychain -d user -s $KEYCHAIN_PATH
+          security find-identity -v
+
+          # use uuid for the name of provisioning profile
+          UUID=$(/usr/libexec/PlistBuddy -c "Print UUID" /dev/stdin <<< $(/usr/bin/security cms -D -i $PP_PATH))
+
+          # apply provisioning profile
+          mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
+          cp $PP_PATH ~/Library/MobileDevice/Provisioning\ Profiles/$UUID.mobileprovision
+
+      - name: List profiles
+        run: cd ~/Library/MobileDevice/Provisioning\ Profiles && ls
+        shell: bash
+
+      # -----------------------
+      # Build
+      # -----------------------
+      - name: Build iOS
+        run: |
+          flutter build ipa --release --export-options-plist ios/ExportOptions.ci.plist
+
+      # -----------------------
+      # Cleanup (safe)
+      # -----------------------
+      - name: Cleanup Apple signing
+        if: always()
+        run: |
+          KEYCHAIN_PATH=$RUNNER_TEMP/app-signing.keychain-db
+          UUID=$(cat $RUNNER_TEMP/profile_uuid.txt || true)
+
+          if [ -n "$UUID" ]; then
+            rm -f ~/Library/MobileDevice/Provisioning\ Profiles/$UUID.mobileprovision
+          fi
+
+          security delete-keychain $KEYCHAIN_PATH || true
+          security default-keychain -s login.keychain || true
+
+          echo "Apple signing cleanup completed"
+
+      # -----------------------
+      # Upload
+      # -----------------------
+      - name: Upload to AppHost
+        id: upload
+        env:
+          APPHOST_USER_ID: ${{ secrets.APPHOST_USER_ID }}
+          APPHOST_APP_ID: ${{ secrets.APPHOST_APP_ID }}
+          APPHOST_KEY: ${{ secrets.APPHOST_KEY }}
+          APPHOST_IOS_BUNDLE_IDENTIFIER: ${{ secrets.APPHOST_IOS_BUNDLE_IDENTIFIER }}
+        run: |
+          # Extract version and app name from pubspec.yaml
+          VERSION=$(grep -E "^version:" pubspec.yaml | sed -E 's/version:[[:space:]]*//' | tr -d '[:space:]')
+          APP_NAME=$(grep -E "^name:" pubspec.yaml | sed -E 's/name:[[:space:]]*//' | tr -d '[:space:]')
+
+          # Find the IPA file
+          IPA_FILE=$(find build/ios/ipa -name "*.ipa" | head -n 1)
+          if [ -z "$IPA_FILE" ]; then
+            echo "Error: IPA file not found in build/ios/ipa/"
+            exit 1
+          fi
+
+          echo "Found IPA file: $IPA_FILE"
+
+          # Fetch upload URL (curl handles URL encoding automatically with -G and --data-urlencode)
+          echo "Fetching upload URL..."
+          UPLOAD_URL=$(curl -s -G "https://appho.st/api/get_upload_url" \
+            --data-urlencode "user_id=${APPHOST_USER_ID}" \
+            --data-urlencode "app_id=${APPHOST_APP_ID}" \
+            --data-urlencode "key=${APPHOST_KEY}" \
+            --data-urlencode "platform=ios" \
+            --data-urlencode "version=${VERSION}" \
+            --data-urlencode "ios_bundle_identifier=${APPHOST_IOS_BUNDLE_IDENTIFIER}")
+
+          if [[ ! "$UPLOAD_URL" =~ ^https: ]]; then
+            echo "Error fetching upload URL: $UPLOAD_URL"
+            exit 1
+          fi
+
+          # Upload file
+          echo "Uploading file..."
+          FILE_SIZE=$(stat -f%z "$IPA_FILE")
+          curl -X PUT "$UPLOAD_URL" \
+            -H "Content-Type: application/octet-stream" \
+            -H "Content-Length: $FILE_SIZE" \
+            --data-binary "@$IPA_FILE" \
+            --progress-bar
+
+          echo ""
+          echo "Upload complete! Install your app from:"
+          echo ""
+
+          # Get version info and print install URL
+          VERSION_RESPONSE=$(curl -s -G "https://appho.st/api/get_current_version/" \
+            --data-urlencode "u=${APPHOST_USER_ID}" \
+            --data-urlencode "a=${APPHOST_APP_ID}" \
+            --data-urlencode "platform=ios")
+          if command -v jq &> /dev/null; then
+            INSTALL_URL=$(echo "$VERSION_RESPONSE" | jq -r '.url')
+          else
+            INSTALL_URL=$(echo "$VERSION_RESPONSE" | grep -o '"url":"[^"]*"' | sed 's/"url":"\([^"]*\)"/\1/')
+          fi
+          echo "$INSTALL_URL"
+          echo ""
+
+          # Save install URL, version, and app name for Telegram step
+          echo "INSTALL_URL=$INSTALL_URL" >> $GITHUB_OUTPUT
+          echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+          echo "APP_NAME=$APP_NAME" >> $GITHUB_OUTPUT
+
+      - name: Send Telegram message
+        run: |
+          VERSION="${{ steps.upload.outputs.VERSION }}"
+          INSTALL_URL="${{ steps.upload.outputs.INSTALL_URL }}"
+          APP_NAME="${{ steps.upload.outputs.APP_NAME }}"
+          TEXT="🚀 *New $APP_NAME is Built and Uploaded !*
+          📱 *Version:* $VERSION
+          🔗 *Link:* $INSTALL_URL"
+
+          curl -s -X POST https://api.telegram.org/bot${{ secrets.TELEGRAMBOT_TOKEN }}/sendMessage \
+            -d chat_id=${{ secrets.TELEGRAM_CHATID }} \
+            -d message_thread_id=${{ secrets.TELEGRAM_TOPICID }} \
+            --data-urlencode "text=$TEXT" \
+            -d parse_mode=Markdown
