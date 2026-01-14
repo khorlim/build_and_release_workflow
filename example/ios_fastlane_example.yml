@@ -5,14 +5,14 @@ name: Example - iOS Fastlane Beta
 
 on:
   # Example: Trigger on push to main branch
-  push:
-    branches:
-      - main
-    paths:
-      - "ios/**"
-      - "fastlane/**"
-      - "Gemfile"
-      - "Gemfile.lock"
+  # push:
+  #   branches:
+  #     - main
+  #   paths:
+  #     - "ios/**"
+  #     - "fastlane/**"
+  #     - "Gemfile"
+  #     - "Gemfile.lock"
 
   # Example: Trigger on manual workflow dispatch
   workflow_dispatch:
@@ -24,15 +24,13 @@ on:
 
 jobs:
   build-and-deploy:
-    uses: ./.github/workflows/ios_fastlane/ios_fastlane_beta.yml
+    uses: khorlim/build_and_release_workflow/.github/workflows/ios_fastlane/ios_fastlane_beta.yml@main
     secrets:
       # Match password for decrypting certificates and provisioning profiles
       # This is the password you set when initializing match
       MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
 
-      # Git basic authorization for accessing the match certificates repository
-      # Format: base64(username:token) or base64(username:password)
-      # To encode: echo -n "username:token" | base64 | pbcopy
+      # Git Personal Access Token
       MATCH_GIT_BASIC_AUTHORIZATION: ${{ secrets.MATCH_GIT_BASIC_AUTHORIZATION }}
 
       # App Store Connect API Key (private key content)
@@ -46,4 +44,3 @@ jobs:
       # App Store Connect API Key Issuer ID
       # Found in App Store Connect → Users and Access → Keys
       APP_STORE_CONNECT_API_KEY_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ISSUER_ID }}
-
