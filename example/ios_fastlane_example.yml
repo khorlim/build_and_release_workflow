@@ -1,4 +1,4 @@
-name: Example - iOS Fastlane Beta
+name: IOS Fastlane
 
 # Must have fastlane init in ios
 # Must have fastlane match setup for ios
@@ -31,6 +31,8 @@ jobs:
     with:
       LANE: "beta"
     secrets:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
       # Match password for decrypting certificates and provisioning profiles
       # This is the password you set when initializing match
       MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
