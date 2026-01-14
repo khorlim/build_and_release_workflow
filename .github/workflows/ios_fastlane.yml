@@ -50,6 +50,16 @@ jobs:
         working-directory: ios
         run: bundle exec fastlane --version
 
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: "3.32.5"
+
+      - name: Install Flutter deps
+        run: flutter pub get
+
+      - name: Generate iOS files
+        run: flutter build ios --release --no-codesign
+
       - name: Run fastlane beta
         working-directory: ios
         env:
