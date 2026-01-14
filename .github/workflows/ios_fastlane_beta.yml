@@ -28,11 +28,11 @@ jobs:
         with:
           ruby-version: 3.2 # or whatever Ruby version your fastlane needs
 
-      - name: Install Bundler
-        run: gem install bundler
+      - name: Install Bundler 2.x
+        run: gem install bundler -v 2.7.2
 
       - name: Install dependencies
-        run: bundle install
+        run: bundle _2.7.2_ install
 
       - name: Install fastlane
         run: bundle exec fastlane --version

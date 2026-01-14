@@ -1,7 +1,10 @@
 name: Example - iOS Fastlane Beta
 
-# This is an example workflow showing how to use the reusable iOS Fastlane Beta workflow
-# Copy this file and customize it for your needs
+# Must have fastlane init in ios
+# Must have fastlane match setup for ios
+# Must have Gemfile in the root of project with content
+# source "https://rubygems.org"
+# gem "fastlane", "~> 2.0"
 
 on:
   # Example: Trigger on push to main branch
