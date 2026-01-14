@@ -67,7 +67,7 @@ jobs:
 
       - name: Pod Install
         working-directory: ios
-        run: bundle exec pod install --repo-update
+        run: pod install --repo-update
 
       - name: Run fastlane beta
         working-directory: ios
