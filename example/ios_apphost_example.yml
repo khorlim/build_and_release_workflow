@@ -23,7 +23,7 @@ on:
 
 jobs:
   build-and-upload:
-    uses: ./.github/workflows/ios_apphost/ios_apphost.yml
+    uses: khorlim/build_and_release_workflow/.github/workflows/ios_apphost.yml@main
     secrets:
       # GitHub token for accessing private submodules
       SUBMODULE_TOKEN: ${{ secrets.GITHUB_TOKEN }}
