@@ -34,12 +34,15 @@ jobs:
           ruby-version: 3.2 # or whatever Ruby version your fastlane needs
 
       - name: Install Bundler 2.x
+        working-directory: ios
         run: gem install bundler -v 2.7.2
 
       - name: Install dependencies
+        working-directory: ios
         run: bundle _2.7.2_ install
 
       - name: Install fastlane
+        working-directory: ios
         run: bundle exec fastlane --version
 
       - name: Run fastlane beta
