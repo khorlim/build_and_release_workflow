@@ -31,7 +31,7 @@ jobs:
     with:
       LANE: "beta"
     secrets:
-      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      PERSONAL_ACCESS_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
 
       # Match password for decrypting certificates and provisioning profiles
       # This is the password you set when initializing match
