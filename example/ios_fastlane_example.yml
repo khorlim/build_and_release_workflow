@@ -1,10 +1,9 @@
 name: IOS Fastlane
 
 # Must have fastlane init in ios
-# Must have fastlane match setup for ios
-# Must have Gemfile in the root of project with content
-# source "https://rubygems.org"
-# gem "fastlane", "~> 2.0"
+# Must have fastlane match setup for ios (refer to tutorial/fastlane_match_tutorial.md)
+# Must have Gemfile in the ios directory of project (refer to tutorial/gem_file_tutorial.md)
+# Must turn off automatic code signing in Xcode and use match signing
 
 on:
   # Example: Trigger on push to main branch
