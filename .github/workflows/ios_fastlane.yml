@@ -63,7 +63,9 @@ jobs:
         run: flutter pub get
 
       - name: Generate iOS files
-        run: flutter build ios --release --no-codesign
+        # --no-codesign: preparation only
+        # --archive-only: stops before turning it into an IPA (saves time)
+        run: flutter build ipa --no-codesign --release --archive-only
 
       - name: Run fastlane beta
         working-directory: ios
@@ -73,4 +75,6 @@ jobs:
           APP_STORE_CONNECT_API_KEY_KEY: ${{ secrets.APP_STORE_CONNECT_API_KEY_KEY }}
           APP_STORE_CONNECT_API_KEY_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_KEY_ID }}
           APP_STORE_CONNECT_API_KEY_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ISSUER_ID }}
-        run: bundle exec fastlane ios ${{ inputs.LANE }}
+          # Force non-interactive mode
+          FASTLANE_IT_WORKS: true
+        run: bundle exec fastlane ${{ inputs.LANE }}
