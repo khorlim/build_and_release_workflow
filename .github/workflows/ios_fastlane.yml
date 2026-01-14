@@ -27,11 +27,14 @@ jobs:
     steps:
       - name: Checkout repo
         uses: actions/checkout@v3
+        with:
+          submodules: true
+          token: ${{ secrets.MATCH_GIT_BASIC_AUTHORIZATION }}
 
       - name: Set up Ruby
         uses: ruby/setup-ruby@v1
         with:
-          ruby-version: 3.2 # or whatever Ruby version your fastlane needs
+          ruby-version: 3.2
 
       - name: Install Bundler 2.x
         working-directory: ios
