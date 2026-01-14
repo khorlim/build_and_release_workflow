@@ -20,8 +20,8 @@ on:
         required: true
 
 jobs:
-  build-and-deploy:
-    name: Build and Deploy iOS
+  run-fastlane:
+    name: Run Fastlane
     runs-on: macos-latest
 
     steps:
@@ -43,11 +43,11 @@ jobs:
         run: bundle exec fastlane --version
 
       - name: Run fastlane beta
+        working-directory: ios
         env:
           MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
           MATCH_GIT_BASIC_AUTHORIZATION: ${{ secrets.MATCH_GIT_BASIC_AUTHORIZATION }}
           APP_STORE_CONNECT_API_KEY_KEY: ${{ secrets.APP_STORE_CONNECT_API_KEY_KEY }}
           APP_STORE_CONNECT_API_KEY_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_KEY_ID }}
           APP_STORE_CONNECT_API_KEY_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ISSUER_ID }}
-        run: cd ios
-          bundle exec fastlane ios ${{ inputs.LANE }}
+        run: bundle exec fastlane ios ${{ inputs.LANE }}
