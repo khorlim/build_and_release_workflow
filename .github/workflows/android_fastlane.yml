@@ -1,0 +1,80 @@
+name: Android Fastlane
+
+on:
+  workflow_call:
+    inputs:
+      LANE:
+        type: string
+        required: false
+        default: "deploy"
+    secrets:
+      PERSONAL_ACCESS_TOKEN:
+        required: true
+      GOOGLE_PLAY_JSON_KEY:
+        required: true
+      ANDROID_KEYSTORE:
+        required: true
+      ANDROID_KEYSTORE_PASSWORD:
+        required: true
+      ANDROID_KEY_ALIAS:
+        required: true
+      ANDROID_KEY_PASSWORD:
+        required: true
+      TELEGRAMBOT_TOKEN:
+        required: true
+      TELEGRAM_CHATID:
+        required: true
+      TELEGRAM_TOPICID:
+        required: true
+
+jobs:
+  build:
+    name: Run Fastlane
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+        with:
+          submodules: true
+          token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+
+      - name: Set up Java
+        uses: actions/setup-java@v3
+        with:
+          distribution: "temurin"
+          java-version: "17"
+
+      - name: Cache Gradle
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper/
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+
+      - name: Install Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.1"
+
+      - name: Install Fastlane
+        run: |
+          gem install fastlane
+
+      - name: Export Google Play JSON
+        run: echo "${{ secrets.GOOGLE_PLAY_JSON_KEY }}" > fastlane/google_play.json
+
+      - name: Decode Android Keystore
+        run: |
+          echo "${{ secrets.ANDROID_KEYSTORE }}" | base64 --decode > android/app/upload-keystore.jks
+
+      - name: Run Fastlane Deploy
+        run: |
+          cd android
+          fastlane ${{ inputs.LANE }}
+        env:
+          ANDROID_KEYSTORE: ${{ secrets.ANDROID_KEYSTORE }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}

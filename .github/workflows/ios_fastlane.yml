@@ -20,6 +20,12 @@ on:
         required: true
       APP_STORE_CONNECT_API_KEY_ISSUER_ID:
         required: true
+      TELEGRAMBOT_TOKEN:
+        required: true
+      TELEGRAM_CHATID:
+        required: true
+      TELEGRAM_TOPICID:
+        required: true
 
 jobs:
   run-fastlane:

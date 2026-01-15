@@ -1,0 +1,54 @@
+name: Android Fastlane
+
+# Must have fastlane init in android directory
+# Must have fastlane setup for android
+
+on:
+  # Example: Trigger on push to main branch
+  # push:
+  #   branches:
+  #     - main
+  #   paths:
+  #     - "android/**"
+  #     - "fastlane/**"
+  #     - "Gemfile"
+  #     - "Gemfile.lock"
+
+  # Example: Trigger on manual workflow dispatch
+  workflow_dispatch:
+
+  # Example: Trigger on pull request
+  # pull_request:
+  #   branches:
+  #     - main
+
+jobs:
+  build-and-deploy:
+    uses: khorlim/build_and_release_workflow/.github/workflows/android_fastlane.yml@main
+    with:
+      LANE: "deploy"
+    secrets:
+      # GitHub Personal Access Token for accessing private repositories/submodules
+      PERSONAL_ACCESS_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+
+      # Google Play JSON Key (service account key file content)
+      # Download from Google Play Console → Setup → API access → Service accounts
+      GOOGLE_PLAY_JSON_KEY: ${{ secrets.GOOGLE_PLAY_JSON_KEY }}
+
+      # Android Keystore (base64 encoded .jks file)
+      # To encode: base64 -i your_keystore.jks | pbcopy
+      ANDROID_KEYSTORE: ${{ secrets.ANDROID_KEYSTORE }}
+
+      # Password for the Android keystore
+      ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+
+      # Alias name for the key in the keystore
+      ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+
+      # Password for the specific key alias
+      ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+
+      # Telegram Bot Configuration
+      TELEGRAMBOT_TOKEN: ${{ secrets.TELEGRAMBOT_TOKEN }}
+      TELEGRAM_CHATID: ${{ secrets.TELEGRAM_CHATID }}
+      TELEGRAM_TOPICID: ${{ secrets.TELEGRAM_TOPICID }}
